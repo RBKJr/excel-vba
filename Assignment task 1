@@ -1,0 +1,90 @@
+Sub myModule()
+
+Dim selectedRange As Range
+Dim selected_last_row As Integer
+Dim selected_last_col As Integer
+Dim test_cell As Range
+Dim different_color_found As Boolean
+Dim main_range As Range
+Dim main_rows As Long
+Dim main_cols As Long
+Dim range_to_be_processed As Range
+Dim colored_cell_row() As Integer
+Dim colored_cell_col() As Integer
+Dim total_colored_cell_in_selection As Integer
+Dim range_to_be_bordered As Boolean
+
+'Getting user selected cells
+Set selectedRange = Selection
+selected_last_row = selectedRange.Rows.Count
+selected_last_col = selectedRange.Columns.Count
+different_color_found = False
+main_rows = Range("A2").End(xlDown).Row
+main_cols = Range("A2").End(xlToRight).Column
+Set main_range = Range("A2:" & Cells(main_rows, main_cols).Address)
+
+'MsgBox "Selected cells range is: " & selectedRange.Cells(1, 1).Address & ":" & selectedRange.Cells(selected_last_row, selected_last_col).Address
+
+'Looping through each cell to check if the selected cells are having different background color than "No Fill"
+For Each test_cell In selectedRange
+    If test_cell.Interior.Color <> 16777215 Then
+        different_color_found = True
+        Exit For
+    End If
+Next test_cell
+
+Dim temp_int As Integer
+
+temp_int = 0
+
+If different_color_found = True Then
+
+    'Getting number of colored cells in selected range
+    For Each test_cell In selectedRange
+        If test_cell.Interior.Color <> 16777215 Then
+            total_colored_cell_in_selection = total_colored_cell_in_selection + 1
+        End If
+    Next test_cell
+    
+    ReDim colored_cell_row(0 To total_colored_cell_in_selection - 1) As Integer
+    ReDim colored_cell_col(0 To total_colored_cell_in_selection - 1) As Integer
+    
+    'Getting the row and column of colored cells in range
+'    For Each test_cell In selectedRange
+'        If test_cell.Interior.Color <> 16777215 Then
+'            colored_cell_row(temp_int) = test_cell.Row
+'            colored_cell_col(temp_int) = test_cell.Column
+'            temp_int = temp_int + 1
+'        End If
+'    Next test_cell
+
+   For i = 1 To selected_last_row
+    For j = 1 To selected_last_col
+        If selectedRange.Cells(i, j).Interior.Color <> 16777215 Then
+            colored_cell_row(temp_int) = i
+            colored_cell_col(temp_int) = j
+            temp_int = temp_int + 1
+        End If
+    Next j
+   Next i
+    
+   For Each test_cell In main_range
+        Set range_to_be_processed = Range(Cells(test_cell.Row, test_cell.Column).Address & ":" & Cells(test_cell.Row + selected_last_row - 1, test_cell.Column + selected_last_col - 1).Address)
+        range_to_be_bordered = True
+        range_to_be_processed.Select
+        For i = 0 To total_colored_cell_in_selection - 1
+            If range_to_be_processed.Cells(colored_cell_row(i), colored_cell_col(i)).Interior.Color = 16777215 Then
+                range_to_be_bordered = False
+                Exit For
+            End If
+        Next i
+        If range_to_be_bordered Then
+            range_to_be_processed.BorderAround LineStyle:=XlLineStyle.xlContinuous, Weight:=xlThick, ColorIndex:=0
+        End If
+   Next test_cell
+   MsgBox "Sheet Process completed", vbInformation
+Else
+    MsgBox "Please select another range having cells colored"
+End If
+
+End Sub
